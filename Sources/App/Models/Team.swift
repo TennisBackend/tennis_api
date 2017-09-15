@@ -24,7 +24,7 @@ final class Team: Model {
         return parent(id: gameId)
     }
 
-    var invitations: Children<Team, Invitation> {
+    var slots: Children<Team, Slot> {
         return children()
     }
 

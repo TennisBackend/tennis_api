@@ -11,21 +11,21 @@ final class Invitation: Model {
     struct Keys {
         static let idKey = "id"
         static let allPlayersInvitedKey = "all_players_invited"
-        static let teamIdKey = "team_id"
+        static let slotIdKey = "slot_id"
     }
 
     var allPlayersInvited: Bool
-    fileprivate(set) var teamId: Identifier
+    fileprivate(set) var slotId: Identifier
 
     /// Creates a new Post
-    init(teamId: Identifier,
+    init(slotId: Identifier,
          allPlayersInvited: Bool) {
         self.allPlayersInvited = allPlayersInvited
-        self.teamId = teamId
+        self.slotId = slotId
     }
 
-    var team: Parent<Invitation, Team> {
-        return parent(id: teamId)
+    var slot: Parent<Invitation, Slot> {
+        return parent(id: slotId)
     }
 
     // MARK: Fluent Serialization
@@ -34,14 +34,14 @@ final class Invitation: Model {
     /// database row
     init(row: Row) throws {
         allPlayersInvited = try row.get(Invitation.Keys.allPlayersInvitedKey)
-        teamId = try row.get(Invitation.Keys.teamIdKey)
+        slotId = try row.get(Invitation.Keys.slotIdKey)
     }
 
     // Serializes the Post to the database
     func makeRow() throws -> Row {
         var row = Row()
         try row.set(Invitation.Keys.allPlayersInvitedKey, allPlayersInvited)
-        try row.set(Invitation.Keys.teamIdKey, teamId)
+        try row.set(Invitation.Keys.slotIdKey, slotId)
         return row
     }
 }
@@ -55,7 +55,7 @@ extension Invitation: Preparation {
         try database.create(self) { builder in
             builder.id()
             builder.bool(Invitation.Keys.allPlayersInvitedKey)
-            builder.foreignId(for: Team.self)
+            builder.foreignId(for: Slot.self)
         }
     }
 
@@ -76,7 +76,7 @@ extension Invitation: Preparation {
 extension Invitation: JSONConvertible {
     convenience init(json: JSON) throws {
         try self.init(
-            teamId: json.get(Invitation.Keys.teamIdKey),
+            slotId: json.get(Invitation.Keys.slotIdKey),
             allPlayersInvited: json.get(Invitation.Keys.allPlayersInvitedKey)
         )
     }
@@ -85,7 +85,7 @@ extension Invitation: JSONConvertible {
         var json = JSON()
         try json.set(Invitation.Keys.idKey, id)
         try json.set(Invitation.Keys.allPlayersInvitedKey, allPlayersInvited)
-        try json.set(Invitation.Keys.teamIdKey, teamId)
+        try json.set(Invitation.Keys.slotIdKey, slotId)
         return json
     }
 }

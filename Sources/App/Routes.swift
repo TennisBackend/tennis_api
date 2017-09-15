@@ -83,17 +83,18 @@ extension Droplet {
             }
             let user = try req.user()
 
-            let teamCount = json["teamCount"]?.int as? Int ?? 1
+            let teamCount = json["teamCount"]?.int ?? 1
             if teamCount == 1 {
                 return try self.storeSingleGame(json: json, meId: user.id!)
+            } else {
+                return try self.storeDoubleGame(json: json, meId: user.id!)
             }
-
-            fatalError()
         }
     }
 
     func storeSingleGame(json: JSON, meId: Identifier) throws -> Game {
-        guard let partnerId = json["first"]?.string else {
+        guard let rivalIds = json["rivals"]?.array,
+              let rivalId = rivalIds.first?.string else {
             throw Abort(.badRequest, metadata: "Incorrect data for single game")
         }
         let game = Game(teamPlayers: 1,
@@ -103,9 +104,79 @@ extension Droplet {
         try game.save()
 
         let firstTeam = Team(gameId: game.id!)
-        let secondTeam = Team(gameId: game.id!)
         try firstTeam.save()
+        let firstSlot = Slot(userId: meId,
+                             teamId: firstTeam.id!,
+                             isOpen: false,
+                             isVacant: false)
+        try firstSlot.save()
+
+        let secondTeam = Team(gameId: game.id!)
         try secondTeam.save()
+
+        let userId = (rivalId == "all") ? nil : try User.find(rivalId)?.id
+        let secondSlot = Slot(userId: userId,
+                              teamId: secondTeam.id!,
+                              isOpen: rivalId == "all",
+                              isVacant: true)
+        try secondSlot.save()
+        let secondInvitation = Invitation(slotId: secondSlot.id!,
+                                          allPlayersInvited: rivalId == "all")
+        try secondInvitation.save()
+
+        return game
+    }
+
+    func storeDoubleGame(json: JSON, meId: Identifier) throws -> Game {
+        guard let rivalIdsArray = json["rivals"]?.array,
+              let partner = json["partner"]?.string
+            else {
+                throw Abort(.badRequest, metadata: "Incorrect data for single game")
+        }
+        let rivalIds = rivalIdsArray.flatMap({ $0.string })
+
+        guard rivalIds.count == 2 else {
+            throw Abort(.badRequest, metadata: "Incorrect data for double game")
+        }
+
+        let game = Game(teamPlayers: 2,
+                        startTime: Date(),
+                        finished: false)
+        try game.save()
+
+        let firstTeam = Team(gameId: game.id!)
+        try firstTeam.save()
+        let firstSlot = Slot(userId: meId,
+                             teamId: firstTeam.id!,
+                             isOpen: false,
+                             isVacant: false)
+        try firstSlot.save()
+
+        let partnerId = (partner == "all") ? nil : try User.find(partner)?.id
+        let partnerSlot = Slot(userId: partnerId,
+                               teamId: firstTeam.id!,
+                               isOpen: partner == "all",
+                               isVacant: true)
+        try partnerSlot.save()
+        let partnerInvitation = Invitation(slotId: partnerSlot.id!,
+                                           allPlayersInvited: partner == "all")
+        try partnerInvitation.save()
+
+        let secondTeam = Team(gameId: game.id!)
+        try secondTeam.save()
+
+        for rivalId in rivalIds {
+            let userId = (rivalId == "all") ? nil : try User.find(rivalId)?.id
+            let slot = Slot(userId: userId,
+                            teamId: secondTeam.id!,
+                            isOpen: rivalId == "all",
+                            isVacant: true)
+            try slot.save()
+            let invitation = Invitation(slotId: slot.id!,
+                                        allPlayersInvited: rivalId == "all")
+            try invitation.save()
+        }
+
         return game
     }
 }

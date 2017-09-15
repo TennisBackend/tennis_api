@@ -24,5 +24,7 @@ extension Config {
         preparations.append(User.self)
         preparations.append(Game.self)
         preparations.append(Team.self)
+        preparations.append(Slot.self)
+        preparations.append(Invitation.self)
     }
 }

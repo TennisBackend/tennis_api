@@ -25,11 +25,11 @@ final class Slot: Model {
 
     var isOpen: Bool
     var isVacant: Bool
-    fileprivate(set) var userId: Identifier
+    fileprivate(set) var userId: Identifier?
     fileprivate(set) var teamId: Identifier
 
     /// Creates a new Post
-    init(userId: Identifier,
+    init(userId: Identifier?,
          teamId: Identifier,
          isOpen: Bool,
          isVacant: Bool) {
@@ -43,8 +43,8 @@ final class Slot: Model {
         return parent(id: teamId)
     }
 
-    var user: Parent<Slot, User> {
-        return parent(id: userId)
+    var invitations: Children<Slot, Invitation> {
+        return children()
     }
 
     // MARK: Fluent Serialization
@@ -55,7 +55,7 @@ final class Slot: Model {
         isOpen = try row.get(Slot.Keys.isOpenKey)
         isVacant = try row.get(Slot.Keys.isVacantKey)
         teamId = try row.get(Slot.Keys.teamIdKey)
-        userId = try row.get(Slot.Keys.userIdKey)
+        userId = try? row.get(Slot.Keys.userIdKey)
     }
 
     // Serializes the Post to the database
@@ -63,8 +63,13 @@ final class Slot: Model {
         var row = Row()
         try row.set(Slot.Keys.isOpenKey, isOpen)
         try row.set(Slot.Keys.isVacantKey, isVacant)
-        try row.set(Slot.Keys.teamIdKey, teamId)
-        try row.set(Slot.Keys.userIdKey, userId)
+        do {
+            try row.set(Slot.Keys.teamIdKey, teamId)
+        } catch {}
+
+        do {
+            try row.set(Slot.Keys.userIdKey, userId)
+        } catch {}
         return row
     }
 }
@@ -112,7 +117,7 @@ extension Slot: JSONConvertible {
         var json = JSON()
         try json.set(Slot.Keys.idKey, id)
         try json.set(Slot.Keys.isVacantKey, isVacant)
-        try json.set(Slot.Keys.userIdKey, user)
+        //try json.set(Slot.Keys.userIdKey, user)
         try json.set(Slot.Keys.teamIdKey, teamId)
         return json
     }
