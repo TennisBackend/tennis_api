@@ -23,9 +23,10 @@ extension Droplet {
         }
 
         get("description") { req in return req.description }
-        
-        try resource("posts", PostController.self)
+
         try resource("users", UserController.self)
+        try resource("games", GameController.self)
+        try resource("teams", TeamController.self)
     }
 
     /// Sets up all routes that can be accessed using

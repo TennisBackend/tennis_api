@@ -2,21 +2,26 @@ import Vapor
 import FluentProvider
 import HTTP
 
-final class Post: Model {
+final class Team: Model {
     let storage = Storage()
-    
+
     // MARK: Properties and database keys
-    
-    /// The content of the post
-    var content: String
-    
+
     /// The column names for `id` and `content` in the database
-    static let idKey = "id"
-    static let contentKey = "content"
+    struct Keys {
+        static let idKey     = "id"
+        static let gameIdKey = "game_id"
+    }
+
+    fileprivate(set) var gameId: Identifier
 
     /// Creates a new Post
-    init(content: String) {
-        self.content = content
+    init(gameId: Identifier) {
+        self.gameId = gameId
+    }
+
+    var game: Parent<Team, Game> {
+        return parent(id: gameId)
     }
 
     // MARK: Fluent Serialization
@@ -24,26 +29,26 @@ final class Post: Model {
     /// Initializes the Post from the
     /// database row
     init(row: Row) throws {
-        content = try row.get(Post.contentKey)
+        gameId = try row.get(Team.Keys.gameIdKey)
     }
 
     // Serializes the Post to the database
     func makeRow() throws -> Row {
         var row = Row()
-        try row.set(Post.contentKey, content)
+        try row.set(Team.Keys.gameIdKey, gameId)
         return row
     }
 }
 
 // MARK: Fluent Preparation
 
-extension Post: Preparation {
+extension Team: Preparation {
     /// Prepares a table/collection in the database
     /// for storing Posts
     static func prepare(_ database: Database) throws {
         try database.create(self) { builder in
             builder.id()
-            builder.string(Post.contentKey)
+            builder.foreignId(for: Game.self)
         }
     }
 
@@ -53,6 +58,7 @@ extension Post: Preparation {
     }
 }
 
+
 // MARK: JSON
 
 // How the model converts from / to JSON.
@@ -60,41 +66,38 @@ extension Post: Preparation {
 //     - Creating a new Post (POST /posts)
 //     - Fetching a post (GET /posts, GET /posts/:id)
 //
-extension Post: JSONConvertible {
+extension Team: JSONConvertible {
     convenience init(json: JSON) throws {
         try self.init(
-            content: json.get(Post.contentKey)
+            gameId: json.get(Team.Keys.gameIdKey)
         )
     }
-    
+
     func makeJSON() throws -> JSON {
         var json = JSON()
-        try json.set(Post.idKey, id)
-        try json.set(Post.contentKey, content)
+        try json.set(Team.Keys.idKey, id)
+        try json.set(Team.Keys.gameIdKey, gameId)
         return json
     }
 }
 
+extension Team: Timestampable { }
+
 // MARK: HTTP
 
-// This allows Post models to be returned
-// directly in route closures
-extension Post: ResponseRepresentable { }
+extension Team: ResponseRepresentable { }
 
-// MARK: Update
+extension Team: Updateable {
 
-// This allows the Post model to be updated
-// dynamically by the request.
-extension Post: Updateable {
-    // Updateable keys are called when `post.update(for: req)` is called.
-    // Add as many updateable keys as you like here.
-    public static var updateableKeys: [UpdateableKey<Post>] {
+    static var updateableKeys: [UpdateableKey<Team>] {
         return [
-            // If the request contains a String at key "content"
-            // the setter callback will be called.
-            UpdateableKey(Post.contentKey, String.self) { post, content in
-                post.content = content
+            UpdateableKey(Team.Keys.gameIdKey, Identifier.self) { team, value in
+                team.gameId = value
             }
         ]
     }
 }
+
+
+
+
