@@ -77,6 +77,33 @@ extension Droplet {
             return user
         }
 
+        token.get("game") { req in
+            guard let string = req.uri.query?.components(separatedBy: "gameId=").last else {
+                throw Abort(.badRequest, metadata: "NoGameId")
+            }
+
+            guard let game = try Game.find(string) else {
+                throw Abort(.badRequest, metadata: "Game Id Incorrect")
+            }
+            var json = JSON()
+            var response: [String: Any] = [:]
+            response["status"] = game.status
+            response["teamPlayers"] = game.teamPlayers
+            let teams = try game.teams.all()
+            var teamArray: [[String: Any]] = []
+            for team in teams {
+                var teamElement: [String: Any] = [:]
+                teamElement["teamId"] = team.id ?? ""
+                let slots = try team.slots.all()
+                let jsonSlots = try slots.map { try $0.makeJSON() }
+                teamElement["slots"] = jsonSlots
+                teamArray.append(teamElement)
+            }
+            response["teams"] = teamArray
+            try json.set("response", response)
+            return json
+        }
+
         token.post("createGame") { req in
             guard var json = req.json else {
                 throw Abort(.badRequest)

@@ -117,7 +117,7 @@ extension Slot: JSONConvertible {
         var json = JSON()
         try json.set(Slot.Keys.idKey, id)
         try json.set(Slot.Keys.isVacantKey, isVacant)
-        //try json.set(Slot.Keys.userIdKey, user)
+        try json.set(Slot.Keys.isOpenKey, isOpen)
         try json.set(Slot.Keys.teamIdKey, teamId)
         return json
     }
