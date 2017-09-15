@@ -14,39 +14,7 @@ final class GameController: ResourceRepresentable {
     /// When consumers call 'POST' on '/posts' with valid JSON
     /// construct and save the post
     func store(_ req: Request) throws -> ResponseRepresentable {
-        guard var json = req.json else {
-            throw Abort(.badRequest)
-        }
-        let user = try req.user()
-
-        let teamCount = json["teamCount"]?.int as? Int ?? 1
-        if teamCount == 1 {
-            try storeSingleGame(json: json, meId: user.id!)
-        }
-
-        let game = try req.game()
-        try game.save()
-        return game
-    }
-
-    func storeSingleGame(json: JSON, meId: Identifier) throws {
-        guard let partnerId = json["first"]?.string else {
-            throw Abort(.badRequest, metadata: "Incorrect data for single game")
-        }
-        let game = Game(teamPlayers: 1,
-                        startTime: Date(),
-                        finished: false)
-
-        let firstTeam = Team(gameId: game.id!)
-        let secondTeam = Team(gameId: game.id!)
-        try firstTeam.save()
-        try secondTeam.save()
-
-        try game.save()
-    }
-
-    func storeDoubleGame(json: JSON) {
-
+        throw Abort(.badRequest)
     }
 
     /// When the consumer calls 'GET' on a specific resource, ie:
@@ -92,7 +60,7 @@ final class GameController: ResourceRepresentable {
         // the new post
         game.startTime = new.startTime
         game.teamPlayers = new.teamPlayers
-        game.finished = new.finished
+        game.status = new.status
         try game.save()
 
         // Return the updated post

@@ -99,7 +99,7 @@ extension Droplet {
         }
         let game = Game(teamPlayers: 1,
                         startTime: Date(),
-                        finished: false)
+                        status: "pending")
 
         try game.save()
 
@@ -141,7 +141,7 @@ extension Droplet {
 
         let game = Game(teamPlayers: 2,
                         startTime: Date(),
-                        finished: false)
+                        status: "pending")
         try game.save()
 
         let firstTeam = Team(gameId: game.id!)

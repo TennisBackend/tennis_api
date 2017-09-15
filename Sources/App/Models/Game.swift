@@ -9,24 +9,24 @@ final class Game: Model {
 
     /// The column names for `id` and `content` in the database
     struct Keys {
-        static let idKey       = "id"
+        static let idKey = "id"
         static let teamPlayers = "team_players"
-        static let startTime   = "start_time"
-        static let finished    = "finished"
-        static let teamsKey    = "teams"
+        static let startTime = "start_time"
+        static let status = "status"
+        static let teamsKey = "teams"
     }
 
     var teamPlayers: Int
     var startTime: Date
-    var finished: Bool
+    var status: String
 
     /// Creates a new Post
     init(teamPlayers: Int,
          startTime: Date,
-         finished: Bool) {
+         status: String) {
         self.teamPlayers = teamPlayers
         self.startTime = startTime
-        self.finished = finished
+        self.status = status
     }
 
     var teams: Children<Game, Team> {
@@ -40,7 +40,7 @@ final class Game: Model {
     init(row: Row) throws {
         teamPlayers = try row.get(Game.Keys.teamPlayers)
         startTime = try row.get(Game.Keys.startTime)
-        finished = try row.get(Game.Keys.finished)
+        status = try row.get(Game.Keys.status)
     }
 
     // Serializes the Post to the database
@@ -48,7 +48,7 @@ final class Game: Model {
         var row = Row()
         try row.set(Game.Keys.teamPlayers, teamPlayers)
         try row.set(Game.Keys.startTime, startTime)
-        try row.set(Game.Keys.finished, finished)
+        try row.set(Game.Keys.status, status)
         return row
     }
 }
@@ -63,7 +63,7 @@ extension Game: Preparation {
             builder.id()
             builder.int(Game.Keys.teamPlayers)
             builder.date(Game.Keys.startTime)
-            builder.bool(Game.Keys.finished, default: false)
+            builder.string(Game.Keys.status)
         }
     }
 
@@ -86,7 +86,7 @@ extension Game: JSONConvertible {
         try self.init(
             teamPlayers: json.get(Game.Keys.teamPlayers),
             startTime: json.get(Game.Keys.startTime),
-            finished: json.get(Game.Keys.finished)
+            status: json.get(Game.Keys.status)
         )
     }
 
@@ -95,7 +95,7 @@ extension Game: JSONConvertible {
         try json.set(Game.Keys.idKey, id)
         try json.set(Game.Keys.teamPlayers, teamPlayers)
         try json.set(Game.Keys.startTime, startTime)
-        try json.set(Game.Keys.finished, finished)
+        try json.set(Game.Keys.status, status)
         try json.set(Game.Keys.teamsKey, teams.all().makeJSON())
         return json
     }
@@ -120,8 +120,8 @@ extension Game: Updateable {
             UpdateableKey(Game.Keys.startTime, Date.self) { game, value in
                 game.startTime = value
             },
-            UpdateableKey(Game.Keys.finished, Bool.self) { game, value in
-                game.finished = value
+            UpdateableKey(Game.Keys.status, String.self) { game, value in
+                game.status = value
             }
         ]
     }
