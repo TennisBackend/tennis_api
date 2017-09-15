@@ -13,6 +13,7 @@ final class Game: Model {
         static let teamPlayers = "team_players"
         static let startTime   = "start_time"
         static let finished    = "finished"
+        static let teamsKey    = "teams"
     }
 
     var teamPlayers: Int
@@ -26,6 +27,10 @@ final class Game: Model {
         self.teamPlayers = teamPlayers
         self.startTime = startTime
         self.finished = finished
+    }
+
+    var teams: Children<Game, Team> {
+        return children()
     }
 
     // MARK: Fluent Serialization
@@ -91,6 +96,7 @@ extension Game: JSONConvertible {
         try json.set(Game.Keys.teamPlayers, teamPlayers)
         try json.set(Game.Keys.startTime, startTime)
         try json.set(Game.Keys.finished, finished)
+        try json.set(Game.Keys.teamsKey, teams.all().makeJSON())
         return json
     }
 }

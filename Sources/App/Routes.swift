@@ -22,5 +22,6 @@ extension Droplet {
 
         try resource("users", UserController.self)
         try resource("games", GameController.self)
+        try resource("teams", TeamController.self)
     }
 }
