@@ -13,10 +13,10 @@ final class UserController: ResourceRepresentable {
     /// When consumers call 'POST' on '/posts' with valid JSON
     /// construct and save the post
     func store(_ req: Request) throws -> ResponseRepresentable {
-        guard let json = req.json else {
+        guard var json = req.json else {
             throw Abort(.badRequest)
         }
-
+        json["rating"] = 1000.0
         let user = try User(json: json)
 
         // ensure no user with this email already exists

@@ -98,7 +98,6 @@ extension User: JSONConvertible {
         try json.set(User.Keys.idKey, id)
         try json.set(User.Keys.name, name)
         try json.set(User.Keys.email, email)
-        try json.set(User.Keys.password, password)
         try json.set(User.Keys.rating, rating)
         return json
     }
