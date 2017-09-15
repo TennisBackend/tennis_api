@@ -25,7 +25,6 @@ extension Droplet {
         get("description") { req in return req.description }
 
         try resource("users", UserController.self)
-        try resource("games", GameController.self)
         try resource("teams", TeamController.self)
     }
 
@@ -75,7 +74,38 @@ extension Droplet {
         // Authorization: Bearer <token from /login>
         token.get("me") { req in
             let user = try req.user()
-            return "Hello, \(user.name)"
+            return user
         }
+
+        token.post("createGame") { req in
+            guard var json = req.json else {
+                throw Abort(.badRequest)
+            }
+            let user = try req.user()
+
+            let teamCount = json["teamCount"]?.int as? Int ?? 1
+            if teamCount == 1 {
+                return try self.storeSingleGame(json: json, meId: user.id!)
+            }
+
+            fatalError()
+        }
+    }
+
+    func storeSingleGame(json: JSON, meId: Identifier) throws -> Game {
+        guard let partnerId = json["first"]?.string else {
+            throw Abort(.badRequest, metadata: "Incorrect data for single game")
+        }
+        let game = Game(teamPlayers: 1,
+                        startTime: Date(),
+                        finished: false)
+
+        try game.save()
+
+        let firstTeam = Team(gameId: game.id!)
+        let secondTeam = Team(gameId: game.id!)
+        try firstTeam.save()
+        try secondTeam.save()
+        return game
     }
 }

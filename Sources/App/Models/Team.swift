@@ -24,6 +24,10 @@ final class Team: Model {
         return parent(id: gameId)
     }
 
+    var invitations: Children<Team, Invitation> {
+        return children()
+    }
+
     // MARK: Fluent Serialization
 
     /// Initializes the Post from the
