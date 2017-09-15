@@ -19,13 +19,13 @@ final class User: Model {
     var name: String
     var email: String
     var password: String
-    var rating: Float
+    var rating: Double
 
     /// Creates a new Post
     init(name: String,
          email: String,
          password: String,
-         rating: Float) {
+         rating: Double) {
         self.name = name
         self.email = email
         self.password = password
@@ -65,7 +65,7 @@ extension User: Preparation {
             builder.string(User.Keys.name)
             builder.string(User.Keys.email)
             builder.string(User.Keys.password)
-            builder.float(User.Keys.rating)
+            builder.double(User.Keys.rating, default: 0)
         }
     }
 
@@ -110,4 +110,29 @@ extension User: Timestampable { }
 // This allows Post models to be returned
 // directly in route closures
 extension User: ResponseRepresentable { }
+
+extension User: Updateable {
+
+    // Updateable keys are called when `post.update(for: req)` is called.
+    // Add as many updateable keys as you like here.
+    static var updateableKeys: [UpdateableKey<User>] {
+        return [
+            // If the request contains a String at key "content"
+            // the setter callback will be called.
+            UpdateableKey(User.Keys.name, String.self) { user, value in
+                user.name = value
+            },
+            UpdateableKey(User.Keys.email, String.self) { user, value in
+                user.email = value
+            },
+            UpdateableKey(User.Keys.password, String.self) { user, value in
+                user.password = value
+            },
+            UpdateableKey(User.Keys.rating, Double.self) { user, value in
+                user.rating = value
+            }
+        ]
+    }
+}
+
 
