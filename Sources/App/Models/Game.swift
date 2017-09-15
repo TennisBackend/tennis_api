@@ -15,23 +15,15 @@ final class Game: Model {
         static let finished    = "finished"
     }
 
-    enum TeamPlayersCount: Int {
-        case one = 1
-        case two
-    }
-
-    var teamPlayers: TeamPlayersCount
+    var teamPlayers: Int
     var startTime: Date
     var finished: Bool
 
     /// Creates a new Post
     init(teamPlayers: Int,
          startTime: Date,
-         finished: Bool) throws {
-        guard let playersCount = TeamPlayersCount(rawValue: teamPlayers) else {
-            throw Abort(.badRequest)
-        }
-        self.teamPlayers = playersCount
+         finished: Bool) {
+        self.teamPlayers = teamPlayers
         self.startTime = startTime
         self.finished = finished
     }
@@ -49,7 +41,7 @@ final class Game: Model {
     // Serializes the Post to the database
     func makeRow() throws -> Row {
         var row = Row()
-        try row.set(Game.Keys.teamPlayers, teamPlayers.rawValue)
+        try row.set(Game.Keys.teamPlayers, teamPlayers)
         try row.set(Game.Keys.startTime, startTime)
         try row.set(Game.Keys.finished, finished)
         return row
@@ -76,6 +68,7 @@ extension Game: Preparation {
     }
 }
 
+
 // MARK: JSON
 
 // How the model converts from / to JSON.
@@ -95,7 +88,7 @@ extension Game: JSONConvertible {
     func makeJSON() throws -> JSON {
         var json = JSON()
         try json.set(Game.Keys.idKey, id)
-        try json.set(Game.Keys.teamPlayers, teamPlayers.rawValue)
+        try json.set(Game.Keys.teamPlayers, teamPlayers)
         try json.set(Game.Keys.startTime, startTime)
         try json.set(Game.Keys.finished, finished)
         return json
