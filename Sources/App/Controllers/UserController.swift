@@ -13,9 +13,29 @@ final class UserController: ResourceRepresentable {
     /// When consumers call 'POST' on '/posts' with valid JSON
     /// construct and save the post
     func store(_ req: Request) throws -> ResponseRepresentable {
-        let user = try req.user()
+        guard let json = req.json else {
+            throw Abort(.badRequest)
+        }
+
+        let user = try User(json: json)
+
+        // ensure no user with this email already exists
+        guard try User.makeQuery().filter("email", user.email).first() == nil else {
+            throw Abort(.badRequest, reason: "A user with that email already exists.")
+        }
+
+        // require a plaintext password is supplied
+        guard let password = json["password"]?.string else {
+            throw Abort(.badRequest)
+        }
+
+//        user.password = try self.hash.make(password.makeBytes()).makeString()
+
         try user.save()
-        return user
+
+        let token = try Token.generate(for: user)
+        try token.save()
+        return token
     }
 
     /// When the consumer calls 'GET' on a specific resource, ie:
@@ -83,16 +103,6 @@ final class UserController: ResourceRepresentable {
             destroy: delete,
             clear: clear
         )
-    }
-}
-
-extension Request {
-    /// Create a post from the JSON body
-    /// return BadRequest error if invalid
-    /// or no JSON
-    func user() throws -> User {
-        guard let json = json else { throw Abort.badRequest }
-        return try User(json: json)
     }
 }
 
