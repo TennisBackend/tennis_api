@@ -25,8 +25,8 @@ final class Slot: Model {
 
     var isOpen: Bool
     var isVacant: Bool
-    fileprivate(set) var userId: Identifier?
-    fileprivate(set) var teamId: Identifier
+    var userId: Identifier?
+    var teamId: Identifier
 
     /// Creates a new Post
     init(userId: Identifier?,
@@ -116,6 +116,10 @@ extension Slot: JSONConvertible {
     func makeJSON() throws -> JSON {
         var json = JSON()
         try json.set(Slot.Keys.idKey, id)
+        if let userId = userId,
+           let user = try User.find(userId) {
+            try json.set("user", user.makeJSON())
+        }
         try json.set(Slot.Keys.isVacantKey, isVacant)
         try json.set(Slot.Keys.isOpenKey, isOpen)
         try json.set(Slot.Keys.teamIdKey, teamId)

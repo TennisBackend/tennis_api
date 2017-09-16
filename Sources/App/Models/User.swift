@@ -99,6 +99,7 @@ extension User: JSONConvertible {
         try json.set(User.Keys.name, name)
         try json.set(User.Keys.email, email)
         try json.set(User.Keys.rating, rating)
+        try json.set("avatar", "http://horrornchill.com/wp-content/uploads/2016/10/american-psycho-serial-killer-movie-730x411.jpg")
         return json
     }
 }

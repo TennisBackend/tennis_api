@@ -104,7 +104,33 @@ extension Droplet {
             return json
         }
 
-        token.post("createGame") { req in
+        token.put("accept_slot") { req in
+            guard let string = req.uri.query?.components(separatedBy: "slotId=").last else {
+                throw Abort(.badRequest, metadata: "NoSlotId")
+            }
+
+            guard let slot = try Slot.find(string) else {
+                throw Abort(.badRequest, metadata: "Slot Id Incorrect")
+            }
+
+            let user = try req.user()
+
+            if (slot.userId == user.id || slot.isOpen) && slot.isVacant {
+                slot.isVacant = false
+                slot.userId = user.id
+                try slot.save()
+                let invitations = try slot.invitations.all()
+                try invitations.forEach {
+                    try $0.delete()
+                }
+
+                return "All's cool"
+            } else {
+                throw Abort(.badRequest, metadata: "Cannot accept slot")
+            }
+        }
+
+        token.post("create_game") { req in
             guard var json = req.json else {
                 throw Abort(.badRequest)
             }
