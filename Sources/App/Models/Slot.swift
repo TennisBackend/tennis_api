@@ -84,7 +84,11 @@ extension Slot: Preparation {
             builder.id()
             builder.bool(Slot.Keys.isOpenKey)
             builder.bool(Slot.Keys.isVacantKey)
-            builder.foreignId(for: User.self)
+            builder.foreignId(for: User.self,
+                              optional: true,
+                              unique: false,
+                              foreignIdKey: "user_id",
+                              foreignKeyName: "user_id")
             builder.foreignId(for: Team.self)
         }
     }

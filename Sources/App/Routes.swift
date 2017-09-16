@@ -135,6 +135,22 @@ extension Droplet {
             }
         }
 
+        token.get("my_games") { req in
+            let user = try req.user()
+            let slots = try Slot.makeQuery().filter("user_id", .equals, user.id).and { query in
+                return try query.filter("is_vacant", .equals, false)
+                }.all()
+            let gameIds = try slots.flatMap { try $0.team.all() }.flatMap { $0.gameId }
+            let jsonArray = try gameIds.flatMap(Game.find).flatMap { $0 }.map { try $0.makeJSON() }
+            return JSON(jsonArray)
+        }
+
+        token.get("games") { req in
+            let games = try Game.all()
+            let jsonArray = try games.flatMap { $0 }.map { try $0.makeJSON() }
+            return JSON(jsonArray)
+        }
+
         token.post("set_game_score") { req in
             guard var json = req.json
                 else {
@@ -187,7 +203,7 @@ extension Droplet {
             }
             let user = try req.user()
 
-            let teamCount = json["teamCount"]?.int ?? 1
+            let teamCount = json["team_count"]?.int ?? 1
             if teamCount == 1 {
                 return try self.storeSingleGame(json: json, meId: user.id!)
             } else {

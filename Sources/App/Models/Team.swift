@@ -12,6 +12,7 @@ final class Team: Model {
         static let idKey = "id"
         static let gameIdKey = "game_id"
         static let gameScoreKey = "score"
+        static let slotsKey = "slots"
     }
 
     var gameId: Identifier
@@ -90,6 +91,7 @@ extension Team: JSONConvertible {
         try json.set(Team.Keys.idKey, id)
         try json.set(Team.Keys.gameIdKey, gameId)
         try json.set(Team.Keys.gameScoreKey, score)
+        try json.set(Team.Keys.slotsKey, slots.all().makeJSON())
         return json
     }
 }
