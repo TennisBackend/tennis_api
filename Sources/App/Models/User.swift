@@ -15,22 +15,26 @@ final class User: Model {
         static let email      = "email"
         static let password   = "password"
         static let rating     = "rating"
+        static let avatar     = "avatar"
     }
 
     var name: String
     var email: String
     var password: String
+    var avatar: String
     var rating: Double
 
     /// Creates a new Post
     init(name: String,
          email: String,
          password: String,
-         rating: Double) {
+         rating: Double,
+         avatar: String) {
         self.name = name
         self.email = email
         self.password = password
         self.rating = rating
+        self.avatar = avatar
     }
 
     // MARK: Fluent Serialization
@@ -42,6 +46,7 @@ final class User: Model {
         email = try row.get(User.Keys.email)
         password = try row.get(User.Keys.password)
         rating = try row.get(User.Keys.rating)
+        avatar = try row.get(User.Keys.avatar)
     }
 
     // Serializes the Post to the database
@@ -51,6 +56,7 @@ final class User: Model {
         try row.set(User.Keys.email, email)
         try row.set(User.Keys.password, password)
         try row.set(User.Keys.rating, rating)
+        try row.set(User.Keys.avatar, avatar)
         return row
     }
 }
@@ -66,6 +72,7 @@ extension User: Preparation {
             builder.string(User.Keys.name)
             builder.string(User.Keys.email)
             builder.string(User.Keys.password)
+            builder.string(User.Keys.avatar)
             builder.double(User.Keys.rating, default: 0)
         }
     }
@@ -89,7 +96,8 @@ extension User: JSONConvertible {
             name: json.get(User.Keys.name),
             email: json.get(User.Keys.email),
             password: json.get(User.Keys.password),
-            rating: json.get(User.Keys.rating)
+            rating: json.get(User.Keys.rating),
+            avatar: json.get(User.Keys.avatar)
         )
     }
 
@@ -99,7 +107,7 @@ extension User: JSONConvertible {
         try json.set(User.Keys.name, name)
         try json.set(User.Keys.email, email)
         try json.set(User.Keys.rating, rating)
-        try json.set("avatar", "http://horrornchill.com/wp-content/uploads/2016/10/american-psycho-serial-killer-movie-730x411.jpg")
+        try json.set(User.Keys.avatar, avatar)
         return json
     }
 }

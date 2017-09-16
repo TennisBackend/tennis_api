@@ -152,12 +152,20 @@ extension Droplet {
                 return try query.filter("is_vacant", .equals, false)
                 }.all()
             let gameIds = try slots.flatMap { try $0.team.all() }.flatMap { $0.gameId }
-            let jsonArray = try gameIds.flatMap(Game.find).flatMap { $0 }.map { try $0.makeJSON() }
+            let games = try gameIds
+                .flatMap(Game.find)
+                .flatMap { $0 }
+                .sorted(by: {
+                    return self.compareStatus($0.status, $1.status) ?? ($0.startTime.compare($1.startTime) == .orderedAscending)
+                })
+            let jsonArray = try games.map { try $0.makeJSON() }
             return JSON(jsonArray)
         }
 
         token.get("games") { req in
-            let games = try Game.all()
+            let games = try Game.all().sorted(by: {
+                return self.compareStatus($0.status, $1.status) ?? ($0.startTime.compare($1.startTime) == .orderedAscending)
+            })
             let jsonArray = try games.flatMap { $0 }.map { try $0.makeJSON() }
             return JSON(jsonArray)
         }
@@ -182,7 +190,7 @@ extension Droplet {
             let loserScore = Double(min(firstTeamScore, secondTeamScore))
             let winnerScore = Double(max(firstTeamScore, secondTeamScore))
 
-            if let game = try Game.find(gameId) {
+            if let game = try Game.find(gameId), game.status == "confirmed" {
                 game.status = "finished"
                 if game.teamPlayers == 1 {
                     try self.update1x1PlayersRating(winnerTeamId: Identifier(winnerTeamId),
@@ -196,6 +204,8 @@ extension Droplet {
                                                     loserScore: loserScore)
                 }
                 try game.save()
+            } else {
+                throw Abort(.badRequest, metadata: "Cannot find game or incorrect game status")
             }
 
             let firstTeam = try Team.find(firstTeamId)
@@ -220,6 +230,22 @@ extension Droplet {
             } else {
                 return try self.storeDoubleGame(json: json, meId: user.id!)
             }
+        }
+    }
+
+    func compareStatus(_ firstStatus: String, _ secondStatus: String) -> Bool? {
+        if firstStatus == secondStatus {
+            return nil
+        }
+        switch (firstStatus, secondStatus) {
+        case ("pending", _):
+            return true
+        case ("confirmed", "pending"):
+            return false
+        case ("finished", _):
+            return false
+        default:
+            return true
         }
     }
 

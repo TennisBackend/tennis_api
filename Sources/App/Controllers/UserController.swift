@@ -17,6 +17,7 @@ final class UserController: ResourceRepresentable {
             throw Abort(.badRequest)
         }
         json["rating"] = 1000.0
+        try json.set("avatar", Avatars.random())
         let user = try User(json: json)
 
         // ensure no user with this email already exists
