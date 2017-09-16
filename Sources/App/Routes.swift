@@ -171,8 +171,8 @@ extension Droplet {
                   let gameId = json["gameId"]?.string,
                   let firstTeamId = teamsArray.first?["teamId"]?.string,
                   let firstTeamScore = teamsArray.first?["score"]?.int,
-                  let secondTeamId = teamsArray.first?["teamId"]?.string,
-                  let secondTeamScore = teamsArray.first?["score"]?.int
+                  let secondTeamId = teamsArray.last?["teamId"]?.string,
+                  let secondTeamScore = teamsArray.last?["score"]?.int
                 else {
                     throw Abort(.badRequest)
             }
