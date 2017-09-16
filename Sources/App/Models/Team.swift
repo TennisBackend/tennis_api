@@ -9,15 +9,19 @@ final class Team: Model {
 
     /// The column names for `id` and `content` in the database
     struct Keys {
-        static let idKey     = "id"
+        static let idKey = "id"
         static let gameIdKey = "game_id"
+        static let gameScoreKey = "score"
     }
 
-    fileprivate(set) var gameId: Identifier
+    var gameId: Identifier
+    var score: Int
 
     /// Creates a new Post
-    init(gameId: Identifier) {
+    init(gameId: Identifier,
+         score: Int = 0) {
         self.gameId = gameId
+        self.score = score
     }
 
     var game: Parent<Team, Game> {
@@ -34,12 +38,14 @@ final class Team: Model {
     /// database row
     init(row: Row) throws {
         gameId = try row.get(Team.Keys.gameIdKey)
+        score = try row.get(Team.Keys.gameScoreKey)
     }
 
     // Serializes the Post to the database
     func makeRow() throws -> Row {
         var row = Row()
         try row.set(Team.Keys.gameIdKey, gameId)
+        try row.set(Team.Keys.gameScoreKey, score)
         return row
     }
 }
@@ -52,6 +58,7 @@ extension Team: Preparation {
     static func prepare(_ database: Database) throws {
         try database.create(self) { builder in
             builder.id()
+            builder.int(Team.Keys.gameScoreKey)
             builder.foreignId(for: Game.self)
         }
     }
@@ -73,7 +80,8 @@ extension Team: Preparation {
 extension Team: JSONConvertible {
     convenience init(json: JSON) throws {
         try self.init(
-            gameId: json.get(Team.Keys.gameIdKey)
+            gameId: json.get(Team.Keys.gameIdKey),
+            score: json.get(Team.Keys.gameScoreKey)
         )
     }
 
@@ -81,6 +89,7 @@ extension Team: JSONConvertible {
         var json = JSON()
         try json.set(Team.Keys.idKey, id)
         try json.set(Team.Keys.gameIdKey, gameId)
+        try json.set(Team.Keys.gameScoreKey, score)
         return json
     }
 }
