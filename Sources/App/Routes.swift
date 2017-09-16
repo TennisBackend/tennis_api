@@ -85,23 +85,8 @@ extension Droplet {
             guard let game = try Game.find(string) else {
                 throw Abort(.badRequest, metadata: "Game Id Incorrect")
             }
-            var json = JSON()
-            var response: [String: Any] = [:]
-            response["status"] = game.status
-            response["teamPlayers"] = game.teamPlayers
-            let teams = try game.teams.all()
-            var teamArray: [[String: Any]] = []
-            for team in teams {
-                var teamElement: [String: Any] = [:]
-                teamElement["teamId"] = team.id ?? ""
-                let slots = try team.slots.all()
-                let jsonSlots = try slots.map { try $0.makeJSON() }
-                teamElement["slots"] = jsonSlots
-                teamArray.append(teamElement)
-            }
-            response["teams"] = teamArray
-            try json.set("response", response)
-            return json
+
+            return try game.makeJSON()
         }
 
         token.post("accept_slot") { req in
@@ -132,6 +117,32 @@ extension Droplet {
                 return "All's cool"
             } else {
                 throw Abort(.badRequest, metadata: "Cannot accept slot")
+            }
+        }
+
+        token.post("decline_slot") { req in
+            guard let string = req.uri.query?.components(separatedBy: "slotId=").last else {
+                throw Abort(.badRequest, metadata: "NoSlotId")
+            }
+
+            guard let slot = try Slot.find(string) else {
+                throw Abort(.badRequest, metadata: "Slot Id Incorrect")
+            }
+
+            let user = try req.user()
+
+            if slot.userId == user.id && slot.isVacant {
+                slot.isVacant = true
+                slot.isOpen = true
+                try slot.save()
+                let invitations = try slot.invitations.all()
+                try invitations.forEach {
+                    try $0.delete()
+                }
+
+                return "All's cool"
+            } else {
+                throw Abort(.badRequest, metadata: "Cannot decline slot")
             }
         }
 
